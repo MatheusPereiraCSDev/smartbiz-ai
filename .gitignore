@@ -1,0 +1,18 @@
+# Front-end
+node_modules/
+dist/
+
+# Backend
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/*.db
+
+# Ambientes virtuais soltos (caso existam)
+.venv/
+venv/
+
+# Diversos
+.DS_Store
+*.pyc
+.vite/

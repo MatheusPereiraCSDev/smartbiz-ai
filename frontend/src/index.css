@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    @apply bg-base text-ink font-body;
+  }
+
+  ::selection {
+    @apply bg-accent/30 text-ink;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f5f5fa;
+    -webkit-box-shadow: 0 0 0px 1000px #2c2e42 inset;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply outline-none ring-0 focus:ring-2 focus:ring-accent/50 focus:border-accent transition;
+  }
+}
