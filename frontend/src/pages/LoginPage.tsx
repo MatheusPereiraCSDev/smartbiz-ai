@@ -4,6 +4,7 @@ import LoginForm from '../components/LoginForm'
 import RegisterModal from '../components/RegisterModal'
 import Logo from '../components/Logo'
 
+
 export default function LoginPage() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
 

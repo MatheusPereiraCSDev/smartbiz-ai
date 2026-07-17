@@ -3,6 +3,10 @@ import { FormEvent, useState } from 'react'
 import Input from './Input'
 import Button from './Button'
 import type { LoginFormData } from '../types/auth'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
+
+
 
 interface LoginFormProps {
   onRegisterClick: () => void
@@ -13,21 +17,36 @@ const initialData: LoginFormData = { email: '', password: '' }
 export default function LoginForm({ onRegisterClick }: LoginFormProps) {
   const [data, setData] = useState<LoginFormData>(initialData)
 
+  const { login } = useAuth()
+  const navigate = useNavigate()
   // UI-only placeholder. Real authentication will be wired to
   // FastAPI + JWT in a later stage of the project.
+  
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-  event.preventDefault()
+    event.preventDefault()
 
-  try {
-    const result = await loginUser({
-      email: data.email,
-      password: data.password,
-    })
-    console.log('Login OK:', result)
-  } catch (error) {
-    console.error('Erro no login:', error)
-  }
+    try {
+      const result = await loginUser({
+        email: data.email,
+        password: data.password,
+      })
+      login(result.access_token, result.user)
+      try {
+  const result = await loginUser({
+    email: data.email,
+    password: data.password,
+  })
+  login(result.access_token, result.user)
+  navigate('/dashboard')
+} catch (error) {
+  console.error('Erro no login:', error)
 }
+      console.log('Usuário logado:', result.user)
+    } catch (error) {
+      console.error('Erro no login:', error)
+    }
+  }
+  
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
