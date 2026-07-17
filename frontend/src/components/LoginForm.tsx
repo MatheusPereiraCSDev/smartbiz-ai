@@ -1,12 +1,10 @@
-import { loginUser } from '../services/api'
 import { FormEvent, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Input from './Input'
 import Button from './Button'
 import type { LoginFormData } from '../types/auth'
+import { loginUser } from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
-
-
 
 interface LoginFormProps {
   onRegisterClick: () => void
@@ -16,14 +14,15 @@ const initialData: LoginFormData = { email: '', password: '' }
 
 export default function LoginForm({ onRegisterClick }: LoginFormProps) {
   const [data, setData] = useState<LoginFormData>(initialData)
-
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
-  // UI-only placeholder. Real authentication will be wired to
-  // FastAPI + JWT in a later stage of the project.
-  
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setError(null)
+    setIsLoading(true)
 
     try {
       const result = await loginUser({
@@ -31,22 +30,13 @@ export default function LoginForm({ onRegisterClick }: LoginFormProps) {
         password: data.password,
       })
       login(result.access_token, result.user)
-      try {
-  const result = await loginUser({
-    email: data.email,
-    password: data.password,
-  })
-  login(result.access_token, result.user)
-  navigate('/dashboard')
-} catch (error) {
-  console.error('Erro no login:', error)
-}
-      console.log('Usuário logado:', result.user)
-    } catch (error) {
-      console.error('Erro no login:', error)
+      navigate('/dashboard')
+    } catch {
+      setError('E-mail ou senha incorretos. Tente novamente.')
+    } finally {
+      setIsLoading(false)
     }
   }
-  
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -71,8 +61,14 @@ export default function LoginForm({ onRegisterClick }: LoginFormProps) {
         required
       />
 
-      <Button type="submit" className="mt-1">
-        Entrar
+      {error && (
+        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-300 animate-fade-in">
+          {error}
+        </p>
+      )}
+
+      <Button type="submit" className="mt-1" disabled={isLoading}>
+        {isLoading ? 'Entrando...' : 'Entrar'}
       </Button>
 
       <p className="text-center text-sm text-ink-muted">
