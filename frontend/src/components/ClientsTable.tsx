@@ -4,6 +4,7 @@ interface ClientsTableProps {
   clients: Client[]
   onEdit: (client: Client) => void
   onDelete: (id: number) => void
+  onPurchase: (client: Client) => void
 }
 
 function EditIcon() {
@@ -40,11 +41,23 @@ function WhatsAppIcon() {
   )
 }
 
+function CartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 005.6 19H17M17 13v6M9 21a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function normalizePhone(phone: string) {
   return phone.replace(/\D/g, '')
 }
 
-export default function ClientsTable({ clients, onEdit, onDelete }: ClientsTableProps) {
+export default function ClientsTable({ clients, onEdit, onDelete, onPurchase }: ClientsTableProps) {
   if (clients.length === 0) {
     return (
       <div className="rounded-2xl border border-surface-line bg-surface p-10 text-center text-sm text-ink-muted">
@@ -82,6 +95,9 @@ export default function ClientsTable({ clients, onEdit, onDelete }: ClientsTable
                       <WhatsAppIcon />
                     </a>
                   ) : null}
+                  <button type="button" onClick={() => onPurchase(client)} title="Registrar compra" className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-accent-dim hover:text-accent-soft">
+                    <CartIcon />
+                  </button>
                   <button type="button" onClick={() => onEdit(client)} title="Editar" className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-accent-dim hover:text-accent-soft">
                     <EditIcon />
                   </button>

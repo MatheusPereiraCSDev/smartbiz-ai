@@ -175,3 +175,54 @@ def delete_client(
     db.delete(client)
     db.commit()
     return {"message": "Cliente removido com sucesso"}
+
+@app.get("/transactions", response_model=list[schemas.TransactionResponse])
+def list_transactions(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return db.query(models.Transaction).order_by(models.Transaction.date.desc()).all()
+
+
+@app.post("/transactions/expense", response_model=schemas.TransactionResponse)
+def create_expense(
+    data: schemas.DespesaCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    new_transaction = models.Transaction(**data.model_dump(), type="despesa", owner_id=current_user.id)
+    db.add(new_transaction)
+    db.commit()
+    db.refresh(new_transaction)
+    return new_transaction
+
+
+@app.post("/transactions/purchase", response_model=schemas.TransactionResponse)
+def create_purchase(
+    data: schemas.PurchaseCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    client = db.query(models.Client).filter(models.Client.id == data.client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+    new_transaction = models.Transaction(**data.model_dump(), type="receita", owner_id=current_user.id)
+    db.add(new_transaction)
+    db.commit()
+    db.refresh(new_transaction)
+    return new_transaction
+
+
+@app.delete("/transactions/{transaction_id}")
+def delete_transaction(
+    transaction_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    transaction = db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transação não encontrada")
+    db.delete(transaction)
+    db.commit()
+    return {"message": "Transação removida com sucesso"}

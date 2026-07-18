@@ -4,9 +4,11 @@ import Sidebar from '../components/Sidebar'
 import Topbar from '../components/Topbar'
 import ClientsTable from '../components/ClientsTable'
 import ClientModal from '../components/ClientModal'
+import PurchaseModal from '../components/PurchaseModal'
 import Button from '../components/Button'
-import { getClients, createClient, updateClient, deleteClient } from '../services/api'
+import { getClients, createClient, updateClient, deleteClient, createPurchase } from '../services/api'
 import type { Client, ClientFormData } from '../types/client'
+import type { PurchaseFormData } from '../types/transaction'
 
 export default function ClientsPage() {
   const { user, token, logout } = useAuth()
@@ -14,6 +16,7 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const [purchaseClient, setPurchaseClient] = useState<Client | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   async function loadClients() {
@@ -58,6 +61,11 @@ export default function ClientsPage() {
     await loadClients()
   }
 
+  async function handlePurchase(data: PurchaseFormData) {
+    if (!token) return
+    await createPurchase(token, data)
+  }
+
   return (
     <div className="flex min-h-screen bg-base text-ink">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -72,19 +80,24 @@ export default function ClientsPage() {
 
         <main className="px-6 py-8 sm:px-8">
           <div className="mb-6 flex justify-center">
-  <Button
-    type="button"
-    onClick={handleOpenCreate}
-    className="w-auto px-4 py-2 text-sm"
-  >
-    + Novo cliente
-  </Button>
-</div>
+            <Button
+              type="button"
+              onClick={handleOpenCreate}
+              className="w-auto px-4 py-2 text-sm"
+            >
+              + Novo cliente
+            </Button>
+          </div>
 
           {isLoading ? (
             <p className="text-sm text-ink-muted">Carregando...</p>
           ) : (
-            <ClientsTable clients={clients} onEdit={handleOpenEdit} onDelete={handleDelete} />
+            <ClientsTable
+              clients={clients}
+              onEdit={handleOpenEdit}
+              onDelete={handleDelete}
+              onPurchase={setPurchaseClient}
+            />
           )}
         </main>
       </div>
@@ -94,6 +107,13 @@ export default function ClientsPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
         editingClient={editingClient}
+      />
+
+      <PurchaseModal
+        open={!!purchaseClient}
+        client={purchaseClient}
+        onClose={() => setPurchaseClient(null)}
+        onSubmit={handlePurchase}
       />
     </div>
   )
