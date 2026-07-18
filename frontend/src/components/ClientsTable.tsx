@@ -23,6 +23,27 @@ function DeleteIcon() {
   )
 }
 
+function MailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M3 6h18v12H3V6z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+      <path d="M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.5A10 10 0 1012 2zm0 18.2a8.2 8.2 0 01-4.2-1.2l-.3-.2-3 .9.9-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1s-.7.8-.9 1c-.2.2-.3.2-.6.1a6.6 6.6 0 01-2-1.2 7.4 7.4 0 01-1.4-1.7c-.1-.2 0-.4.1-.5l.4-.5c.1-.1.2-.3.2-.4a.5.5 0 000-.5c-.1-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2c0 1.3 1 2.6 1.1 2.7.1.2 2 3 4.7 4.2.7.3 1.2.5 1.6.6a3.9 3.9 0 001.8.1c.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z" />
+    </svg>
+  )
+}
+
+function normalizePhone(phone: string) {
+  return phone.replace(/\D/g, '')
+}
+
 export default function ClientsTable({ clients, onEdit, onDelete }: ClientsTableProps) {
   if (clients.length === 0) {
     return (
@@ -51,20 +72,20 @@ export default function ClientsTable({ clients, onEdit, onDelete }: ClientsTable
               <td className="px-5 py-3.5 text-ink-muted">{client.phone || '—'}</td>
               <td className="px-5 py-3.5">
                 <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                  <button
-                    type="button"
-                    onClick={() => onEdit(client)}
-                    aria-label="Editar cliente"
-                    className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-accent-dim hover:text-accent-soft"
-                  >
+                  {client.email ? (
+                    <a href={`mailto:${client.email}`} title="Enviar e-mail" className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-accent-dim hover:text-accent-soft">
+                      <MailIcon />
+                    </a>
+                  ) : null}
+                  {client.phone ? (
+                    <a href={`https://wa.me/${normalizePhone(client.phone)}`} target="_blank" rel="noopener noreferrer" title="Enviar mensagem via WhatsApp" className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-green-500/10 hover:text-green-400">
+                      <WhatsAppIcon />
+                    </a>
+                  ) : null}
+                  <button type="button" onClick={() => onEdit(client)} title="Editar" className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-accent-dim hover:text-accent-soft">
                     <EditIcon />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onDelete(client.id)}
-                    aria-label="Remover cliente"
-                    className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-red-500/10 hover:text-red-300"
-                  >
+                  <button type="button" onClick={() => onDelete(client.id)} title="Remover" className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-red-500/10 hover:text-red-300">
                     <DeleteIcon />
                   </button>
                 </div>
