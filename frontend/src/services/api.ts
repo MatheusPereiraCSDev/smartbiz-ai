@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:8000'
+const API_URL = import.meta.env.VITE_API_URL
 
 
 export async function registerUser(data: {
@@ -31,4 +31,49 @@ export async function loginUser(data: { email: string; password: string }) {
   }
 
   return response.json()
+}
+
+import type { Client, ClientFormData } from '../types/client'
+
+function authHeaders(token: string) {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  }
+}
+
+export async function getClients(token: string): Promise<Client[]> {
+  const response = await fetch(`${API_URL}/clients`, {
+    headers: authHeaders(token),
+  })
+  if (!response.ok) throw new Error('Erro ao buscar clientes')
+  return response.json()
+}
+
+export async function createClient(token: string, data: ClientFormData): Promise<Client> {
+  const response = await fetch(`${API_URL}/clients`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) throw new Error('Erro ao criar cliente')
+  return response.json()
+}
+
+export async function updateClient(token: string, id: number, data: ClientFormData): Promise<Client> {
+  const response = await fetch(`${API_URL}/clients/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) throw new Error('Erro ao atualizar cliente')
+  return response.json()
+}
+
+export async function deleteClient(token: string, id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/clients/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  })
+  if (!response.ok) throw new Error('Erro ao remover cliente')
 }
