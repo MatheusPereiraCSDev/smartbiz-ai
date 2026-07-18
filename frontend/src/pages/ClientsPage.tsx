@@ -71,16 +71,15 @@ export default function ClientsPage() {
         />
 
         <main className="px-6 py-8 sm:px-8">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold">Clientes</h2>
-            <Button
-                    type="button"
-                    onClick={handleOpenCreate}
-                    className="w-auto px-[15px] py-[7.5px] text-xs"
-                    >
-                    + Novo cliente
-            </Button>
-          </div>
+          <div className="mb-6 flex justify-center">
+  <Button
+    type="button"
+    onClick={handleOpenCreate}
+    className="w-auto px-4 py-2 text-sm"
+  >
+    + Novo cliente
+  </Button>
+</div>
 
           {isLoading ? (
             <p className="text-sm text-ink-muted">Carregando...</p>
