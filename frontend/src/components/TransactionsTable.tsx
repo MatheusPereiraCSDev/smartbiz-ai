@@ -37,10 +37,10 @@ export default function TransactionsTable({ transactions, onDelete }: Transactio
           <tr className="border-b border-surface-line text-xs uppercase tracking-wide text-ink-faint">
             <th className="px-5 py-3 font-medium">Descrição</th>
             <th className="px-5 py-3 font-medium">Tipo</th>
+            <th className="px-5 py-3 font-medium">Cliente</th>
             <th className="px-5 py-3 font-medium">Data</th>
             <th className="px-5 py-3 font-medium text-right">Valor</th>
             <th className="px-5 py-3 font-medium text-right">Ações</th>
-            <th className="px-5 py-3 font-medium">Cliente</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-surface-line">
@@ -48,7 +48,6 @@ export default function TransactionsTable({ transactions, onDelete }: Transactio
             <tr key={tx.id} className="group transition-colors hover:bg-surface-soft/50">
               <td className="px-5 py-3.5 font-medium text-ink">{tx.description}</td>
               <td className="px-5 py-3.5">
-                <td className="px-5 py-3.5 text-ink-muted">{tx.client?.name ?? '—'}</td>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
                     tx.type === 'receita'
@@ -59,6 +58,7 @@ export default function TransactionsTable({ transactions, onDelete }: Transactio
                   {tx.type}
                 </span>
               </td>
+              <td className="px-5 py-3.5 text-ink-muted">{tx.client?.name ?? '—'}</td>
               <td className="px-5 py-3.5 text-ink-muted">{formatDate(tx.date)}</td>
               <td
                 className={`px-5 py-3.5 text-right font-medium ${
