@@ -9,6 +9,7 @@ import AttentionPanel from '../components/AttentionPanel'
 import { getClients, getTransactions } from '../services/api'
 import type { Client } from '../types/client'
 import type { Transaction } from '../types/transaction'
+import type { Alert } from '../components/AttentionPanel'
 
 function currentMonthRevenue(transactions: Transaction[]): number {
   const now = new Date()
@@ -46,6 +47,43 @@ function monthlyRevenueSeries(transactions: Transaction[]) {
   }
 
   return series
+}
+
+function buildAlerts(clients: Client[], transactions: Transaction[]): Alert[] {
+  const alerts: Alert[] = []
+
+  const now = new Date()
+  const monthExpenses = transactions.filter((tx) => {
+    const txDate = new Date(tx.date + 'T00:00:00')
+    return (
+      tx.type === 'despesa' &&
+      txDate.getMonth() === now.getMonth() &&
+      txDate.getFullYear() === now.getFullYear()
+    )
+  })
+  const totalExpenses = monthExpenses.reduce((sum, tx) => sum + tx.amount, 0)
+
+  if (totalExpenses > 0) {
+    alerts.push({
+      title: 'Despesas do mês',
+      description: `${monthExpenses.length} despesa(s) somando ${totalExpenses.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+      level: totalExpenses > 1000 ? 'critical' : 'warning',
+    })
+  }
+
+  const clientsWithoutPurchase = clients.filter(
+    (client) => !transactions.some((tx) => tx.client_id === client.id)
+  )
+
+  if (clientsWithoutPurchase.length > 0) {
+    alerts.push({
+      title: 'Clientes sem compras',
+      description: `${clientsWithoutPurchase.length} cliente(s) cadastrado(s) sem nenhuma venda registrada`,
+      level: 'warning',
+    })
+  }
+
+  return alerts
 }
 
 export default function DashboardPage() {
@@ -128,7 +166,7 @@ export default function DashboardPage() {
                   <SalesChart data={monthlyRevenueSeries(transactions)} />
                 </div>
                 <div className="flex flex-col gap-4">
-                  <AttentionPanel />
+                  <AttentionPanel alerts={buildAlerts(clients, transactions)} />
                   <OrdersPanel orders={recentOrders} />
                 </div>
               </div>
