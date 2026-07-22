@@ -5,7 +5,7 @@ const navItems = [
   { label: 'Visão geral', icon: 'grid', path: '/dashboard' },
   { label: 'Clientes', icon: 'users', path: '/clients' },
   { label: 'Financeiro', icon: 'wallet', path: '/finance' },
-  { label: 'Produtos', icon: 'box', path: null },
+  { label: 'Produtos', icon: 'box', path: '/products' },
 ]
 
 function NavIcon({ name }: { name: string }) {

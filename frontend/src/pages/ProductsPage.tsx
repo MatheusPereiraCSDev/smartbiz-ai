@@ -2,74 +2,65 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Sidebar from '../components/Sidebar'
 import Topbar from '../components/Topbar'
-import ClientsTable from '../components/ClientsTable'
-import ClientModal from '../components/ClientModal'
-import PurchaseModal from '../components/PurchaseModal'
+import ProductsTable from '../components/ProductsTable'
+import ProductModal from '../components/ProductModal'
 import Button from '../components/Button'
-import { getClients, createClient, updateClient, deleteClient, createPurchase } from '../services/api'
-import type { Client, ClientFormData } from '../types/client'
-import type { PurchaseFormData } from '../types/transaction'
 import SearchInput from '../components/SearchInput'
+import { getProducts, createProduct, updateProduct, deleteProduct } from '../services/api'
+import type { Product, ProductFormData } from '../types/product'
 
-export default function ClientsPage() {
+export default function ProductsPage() {
   const { user, token, logout } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [clients, setClients] = useState<Client[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingClient, setEditingClient] = useState<Client | null>(null)
-  const [purchaseClient, setPurchaseClient] = useState<Client | null>(null)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
 
-  async function loadClients() {
+  async function loadProducts() {
     if (!token) return
     setIsLoading(true)
     try {
-      const data = await getClients(token)
-      setClients(data)
+      setProducts(await getProducts(token))
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    loadClients()
+    loadProducts()
   }, [token])
 
   function handleOpenCreate() {
-    setEditingClient(null)
+    setEditingProduct(null)
     setIsModalOpen(true)
   }
 
-  function handleOpenEdit(client: Client) {
-    setEditingClient(client)
+  function handleOpenEdit(product: Product) {
+    setEditingProduct(product)
     setIsModalOpen(true)
   }
 
-  async function handleSubmit(data: ClientFormData) {
+  async function handleSubmit(data: ProductFormData) {
     if (!token) return
-    if (editingClient) {
-      await updateClient(token, editingClient.id, data)
+    if (editingProduct) {
+      await updateProduct(token, editingProduct.id, data)
     } else {
-      await createClient(token, data)
+      await createProduct(token, data)
     }
-    await loadClients()
+    await loadProducts()
   }
 
   async function handleDelete(id: number) {
     if (!token) return
-    if (!confirm('Remover este cliente?')) return
-    await deleteClient(token, id)
-    await loadClients()
+    if (!confirm('Remover este produto?')) return
+    await deleteProduct(token, id)
+    await loadProducts()
   }
 
-  async function handlePurchase(data: PurchaseFormData) {
-    if (!token) return
-    await createPurchase(token, data)
-  }
-
-  const filteredClients = clients.filter((client) =>
-    client.name.toLowerCase().includes(search.toLowerCase())
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -88,35 +79,23 @@ export default function ClientsPage() {
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nome..." />
             <Button type="button" onClick={handleOpenCreate} className="w-auto px-4 py-2 text-sm">
-              + Novo cliente
+              + Novo produto
             </Button>
           </div>
 
           {isLoading ? (
             <p className="text-sm text-ink-muted">Carregando...</p>
           ) : (
-            <ClientsTable
-              clients={filteredClients}
-              onEdit={handleOpenEdit}
-              onDelete={handleDelete}
-              onPurchase={setPurchaseClient}
-            />
+            <ProductsTable products={filteredProducts} onEdit={handleOpenEdit} onDelete={handleDelete} />
           )}
         </main>
       </div>
 
-      <ClientModal
+      <ProductModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        editingClient={editingClient}
-      />
-
-      <PurchaseModal
-        open={!!purchaseClient}
-        client={purchaseClient}
-        onClose={() => setPurchaseClient(null)}
-        onSubmit={handlePurchase}
+        editingProduct={editingProduct}
       />
     </div>
   )

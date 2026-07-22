@@ -5,6 +5,7 @@ import Topbar from '../components/Topbar'
 import TransactionsTable from '../components/TransactionsTable'
 import TransactionModal from '../components/TransactionModal'
 import Button from '../components/Button'
+import SearchInput from '../components/SearchInput'
 import { getTransactions, createExpense, deleteTransaction } from '../services/api'
 import type { Transaction, ExpenseFormData } from '../types/transaction'
 
@@ -14,6 +15,7 @@ export default function FinancePage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   async function loadTransactions() {
     if (!token) return
@@ -29,10 +31,10 @@ export default function FinancePage() {
     loadTransactions()
   }, [token])
 
- async function handleSubmit(data: ExpenseFormData) {
-  if (!token) return
-  await createExpense(token, data)
-  await loadTransactions()
+  async function handleSubmit(data: ExpenseFormData) {
+    if (!token) return
+    await createExpense(token, data)
+    await loadTransactions()
   }
 
   async function handleDelete(id: number) {
@@ -45,6 +47,12 @@ export default function FinancePage() {
   const balance = transactions.reduce(
     (acc, tx) => acc + (tx.type === 'receita' ? tx.amount : -tx.amount),
     0
+  )
+
+  const filteredTransactions = transactions.filter(
+    (tx) =>
+      tx.description.toLowerCase().includes(search.toLowerCase()) ||
+      tx.client?.name.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -60,7 +68,7 @@ export default function FinancePage() {
         />
 
         <main className="px-6 py-8 sm:px-8">
-          <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="rounded-2xl border border-surface-line bg-surface px-5 py-3">
               <p className="text-xs text-ink-muted">Saldo atual</p>
               <p className={`font-display text-xl font-semibold ${balance >= 0 ? 'text-accent-soft' : 'text-red-300'}`}>
@@ -68,19 +76,22 @@ export default function FinancePage() {
               </p>
             </div>
 
-            <Button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              className="w-auto px-4 py-2 text-sm"
-            >
-              + Nova transação
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <SearchInput value={search} onChange={setSearch} placeholder="Buscar descrição ou cliente..." />
+              <Button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="w-auto px-4 py-2 text-sm"
+              >
+                + Nova despesa
+              </Button>
+            </div>
           </div>
 
           {isLoading ? (
             <p className="text-sm text-ink-muted">Carregando...</p>
           ) : (
-            <TransactionsTable transactions={transactions} onDelete={handleDelete} />
+            <TransactionsTable transactions={filteredTransactions} onDelete={handleDelete} />
           )}
         </main>
       </div>

@@ -1,5 +1,6 @@
 import type { Client, ClientFormData } from '../types/client'
 import type { Transaction, ExpenseFormData, PurchaseFormData } from '../types/transaction'
+import type { Product, ProductFormData } from '../types/product'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -110,4 +111,38 @@ export async function deleteTransaction(token: string, id: number): Promise<void
     headers: authHeaders(token),
   })
   if (!response.ok) throw new Error('Erro ao remover transação')
+}
+
+export async function getProducts(token: string): Promise<Product[]> {
+  const response = await fetch(`${API_URL}/products`, { headers: authHeaders(token) })
+  if (!response.ok) throw new Error('Erro ao buscar produtos')
+  return response.json()
+}
+
+export async function createProduct(token: string, data: ProductFormData): Promise<Product> {
+  const response = await fetch(`${API_URL}/products`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) throw new Error('Erro ao criar produto')
+  return response.json()
+}
+
+export async function updateProduct(token: string, id: number, data: ProductFormData): Promise<Product> {
+  const response = await fetch(`${API_URL}/products/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) throw new Error('Erro ao atualizar produto')
+  return response.json()
+}
+
+export async function deleteProduct(token: string, id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/products/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  })
+  if (!response.ok) throw new Error('Erro ao remover produto')
 }

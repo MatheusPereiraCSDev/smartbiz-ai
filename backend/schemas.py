@@ -37,3 +37,17 @@ class TransactionResponse(TransactionBase):
 
     class Config:
         from_attributes = True
+
+class ProductBase(BaseModel):
+    name: str
+    price: float
+    stock: int
+
+class ProductCreate(ProductBase):
+    pass
+
+class ProductResponse(ProductBase):
+    id: int
+
+    class Config:
+        from_attributes = True

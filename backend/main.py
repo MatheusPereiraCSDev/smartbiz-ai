@@ -226,3 +226,56 @@ def delete_transaction(
     db.delete(transaction)
     db.commit()
     return {"message": "Transação removida com sucesso"}
+
+@app.get("/products", response_model=list[schemas.ProductResponse])
+def list_products(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return db.query(models.Product).all()
+
+
+@app.post("/products", response_model=schemas.ProductResponse)
+def create_product(
+    data: schemas.ProductCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    new_product = models.Product(**data.model_dump(), owner_id=current_user.id)
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+    return new_product
+
+
+@app.put("/products/{product_id}", response_model=schemas.ProductResponse)
+def update_product(
+    product_id: int,
+    data: schemas.ProductCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+
+    for field, value in data.model_dump().items():
+        setattr(product, field, value)
+
+    db.commit()
+    db.refresh(product)
+    return product
+
+
+@app.delete("/products/{product_id}")
+def delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    db.delete(product)
+    db.commit()
+    return {"message": "Produto removido com sucesso"}

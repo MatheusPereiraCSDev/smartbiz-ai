@@ -6,9 +6,10 @@ import StatCard from '../components/StatCard'
 import SalesChart from '../components/SalesChart'
 import OrdersPanel from '../components/OrdersPanel'
 import AttentionPanel from '../components/AttentionPanel'
-import { getClients, getTransactions } from '../services/api'
+import { getClients, getTransactions, getProducts } from '../services/api'
 import type { Client } from '../types/client'
 import type { Transaction } from '../types/transaction'
+import type { Product } from '../types/product'
 import type { Alert } from '../components/AttentionPanel'
 
 function currentMonthRevenue(transactions: Transaction[]): number {
@@ -49,8 +50,17 @@ function monthlyRevenueSeries(transactions: Transaction[]) {
   return series
 }
 
-function buildAlerts(clients: Client[], transactions: Transaction[]): Alert[] {
+function buildAlerts(clients: Client[], transactions: Transaction[], products: Product[]): Alert[] {
   const alerts: Alert[] = []
+
+  const lowStockProducts = products.filter((p) => p.stock <= 5)
+  if (lowStockProducts.length > 0) {
+    alerts.push({
+      title: 'Estoque baixo',
+      description: `${lowStockProducts.length} produto(s) com 5 unidades ou menos`,
+      level: 'critical',
+    })
+  }
 
   const now = new Date()
   const monthExpenses = transactions.filter((tx) => {
@@ -91,6 +101,7 @@ export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -98,12 +109,14 @@ export default function DashboardPage() {
       if (!token) return
       setIsLoading(true)
       try {
-        const [clientsData, transactionsData] = await Promise.all([
+        const [clientsData, transactionsData, productsData] = await Promise.all([
           getClients(token),
           getTransactions(token),
+          getProducts(token),
         ])
         setClients(clientsData)
         setTransactions(transactionsData)
+        setProducts(productsData)
       } finally {
         setIsLoading(false)
       }
@@ -166,7 +179,7 @@ export default function DashboardPage() {
                   <SalesChart data={monthlyRevenueSeries(transactions)} />
                 </div>
                 <div className="flex flex-col gap-4">
-                  <AttentionPanel alerts={buildAlerts(clients, transactions)} />
+                  <AttentionPanel alerts={buildAlerts(clients, transactions, products)} />
                   <OrdersPanel orders={recentOrders} />
                 </div>
               </div>
