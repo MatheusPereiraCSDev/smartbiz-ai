@@ -6,6 +6,7 @@ import models
 from sqlalchemy.orm import Session
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from security import hash_password, verify_password, create_access_token, decode_access_token
+from notifications import send_purchase_notification
 import schemas
 
 def get_db():
@@ -211,6 +212,12 @@ def create_purchase(
     db.add(new_transaction)
     db.commit()
     db.refresh(new_transaction)
+    send_purchase_notification(
+    phone=client.phone,
+    client_name=client.name,
+    description=new_transaction.description,
+    amount=new_transaction.amount,
+)
     return new_transaction
 
 
