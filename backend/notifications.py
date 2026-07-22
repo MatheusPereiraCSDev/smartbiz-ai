@@ -1,6 +1,10 @@
+import os
 import httpx
+from dotenv import load_dotenv
 
-N8N_WEBHOOK_URL = "http://localhost:5678/webhook/enviar-mensagem"
+load_dotenv()
+
+N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
 
 def send_purchase_notification(phone: str, client_name: str, description: str, amount: float):
     if not phone:
