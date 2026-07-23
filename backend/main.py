@@ -286,3 +286,24 @@ def delete_product(
     db.delete(product)
     db.commit()
     return {"message": "Produto removido com sucesso"}
+
+@app.put("/transactions/{transaction_id}", response_model=schemas.TransactionResponse)
+def update_transaction(
+    transaction_id: int,
+    data: schemas.DespesaCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    transaction = db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transação não encontrada")
+
+    if transaction.type != "despesa":
+        raise HTTPException(status_code=400, detail="Apenas despesas podem ser editadas")
+
+    for field, value in data.model_dump().items():
+        setattr(transaction, field, value)
+
+    db.commit()
+    db.refresh(transaction)
+    return transaction

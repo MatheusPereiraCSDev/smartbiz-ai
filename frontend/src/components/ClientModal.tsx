@@ -2,6 +2,8 @@ import { FormEvent, useEffect, useState } from 'react'
 import Input from './Input'
 import Button from './Button'
 import type { Client, ClientFormData } from '../types/client'
+import { formatPhone, isValidPhone } from '../utils/phone'
+
 
 interface ClientModalProps {
   open: boolean
@@ -31,18 +33,24 @@ export default function ClientModal({ open, onClose, onSubmit, editingClient }: 
   if (!open) return null
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError(null)
-    setIsLoading(true)
-    try {
-      await onSubmit(data)
-      onClose()
-    } catch {
-      setError('Não foi possível salvar o cliente.')
-    } finally {
-      setIsLoading(false)
-    }
+  event.preventDefault()
+  setError(null)
+
+  if (data.phone && !isValidPhone(data.phone)) {
+    setError('Telefone inválido. Use o formato +55 (DDD) 99999-9999.')
+    return
   }
+
+  setIsLoading(true)
+  try {
+    await onSubmit(data)
+    onClose()
+  } catch {
+    setError('Não foi possível salvar o cliente.')
+  } finally {
+    setIsLoading(false)
+  }
+}
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in" role="dialog" aria-modal="true">
@@ -87,10 +95,11 @@ export default function ClientModal({ open, onClose, onSubmit, editingClient }: 
           />
           <Input
             id="client-phone"
-            label="Telefone"
+            label="Telefone (com DDI)"
             type="text"
+            placeholder="+55 (11) 99999-9999"
             value={data.phone}
-            onChange={(e) => setData({ ...data, phone: e.target.value })}
+            onChange={(e) => setData({ ...data, phone: formatPhone(e.target.value) })}
           />
 
           {error && (

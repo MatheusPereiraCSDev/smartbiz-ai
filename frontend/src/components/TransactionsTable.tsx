@@ -2,7 +2,17 @@ import type { Transaction } from '../types/transaction'
 
 interface TransactionsTableProps {
   transactions: Transaction[]
+  onEdit: (transaction: Transaction) => void
   onDelete: (id: number) => void
+}
+
+function EditIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M11 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-5" strokeLinecap="round" />
+      <path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 }
 
 function DeleteIcon() {
@@ -21,7 +31,7 @@ function formatDate(value: string) {
   return new Date(value + 'T00:00:00').toLocaleDateString('pt-BR')
 }
 
-export default function TransactionsTable({ transactions, onDelete }: TransactionsTableProps) {
+export default function TransactionsTable({ transactions, onEdit, onDelete }: TransactionsTableProps) {
   if (transactions.length === 0) {
     return (
       <div className="rounded-2xl border border-surface-line bg-surface p-10 text-center text-sm text-ink-muted">
@@ -68,7 +78,17 @@ export default function TransactionsTable({ transactions, onDelete }: Transactio
                 {tx.type === 'despesa' ? '-' : '+'} {formatCurrency(tx.amount)}
               </td>
               <td className="px-5 py-3.5">
-                <div className="flex justify-end opacity-60 transition-opacity group-hover:opacity-100">
+                <div className="flex justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                  {tx.type === 'despesa' && (
+                    <button
+                      type="button"
+                      onClick={() => onEdit(tx)}
+                      title="Editar"
+                      className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-accent-dim hover:text-accent-soft"
+                    >
+                      <EditIcon />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => onDelete(tx.id)}

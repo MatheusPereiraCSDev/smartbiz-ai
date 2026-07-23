@@ -1,12 +1,13 @@
 import { FormEvent, useEffect, useState } from 'react'
 import Input from './Input'
 import Button from './Button'
-import type { ExpenseFormData } from '../types/transaction'
+import type { ExpenseFormData, Transaction } from '../types/transaction'
 
 interface TransactionModalProps {
   open: boolean
   onClose: () => void
   onSubmit: (data: ExpenseFormData) => Promise<void>
+  editingTransaction: Transaction | null
 }
 
 const emptyForm: ExpenseFormData = {
@@ -15,17 +16,21 @@ const emptyForm: ExpenseFormData = {
   date: new Date().toISOString().slice(0, 10),
 }
 
-export default function TransactionModal({ open, onClose, onSubmit }: TransactionModalProps) {
+export default function TransactionModal({ open, onClose, onSubmit, editingTransaction }: TransactionModalProps) {
   const [data, setData] = useState<ExpenseFormData>(emptyForm)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
-      setData(emptyForm)
+      setData(
+        editingTransaction
+          ? { description: editingTransaction.description, amount: editingTransaction.amount, date: editingTransaction.date }
+          : emptyForm
+      )
       setError(null)
     }
-  }, [open])
+  }, [open, editingTransaction])
 
   if (!open) return null
 
@@ -54,7 +59,9 @@ export default function TransactionModal({ open, onClose, onSubmit }: Transactio
           </svg>
         </button>
 
-        <h2 className="font-display text-xl font-semibold text-ink">Nova despesa</h2>
+        <h2 className="font-display text-xl font-semibold text-ink">
+          {editingTransaction ? 'Editar despesa' : 'Nova despesa'}
+        </h2>
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           <Input

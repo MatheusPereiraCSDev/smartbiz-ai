@@ -6,7 +6,7 @@ import TransactionsTable from '../components/TransactionsTable'
 import TransactionModal from '../components/TransactionModal'
 import Button from '../components/Button'
 import SearchInput from '../components/SearchInput'
-import { getTransactions, createExpense, deleteTransaction } from '../services/api'
+import { getTransactions, createExpense, updateExpense, deleteTransaction } from '../services/api'
 import type { Transaction, ExpenseFormData } from '../types/transaction'
 
 export default function FinancePage() {
@@ -14,6 +14,7 @@ export default function FinancePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
 
@@ -31,9 +32,23 @@ export default function FinancePage() {
     loadTransactions()
   }, [token])
 
+  function handleOpenCreate() {
+    setEditingTransaction(null)
+    setIsModalOpen(true)
+  }
+
+  function handleOpenEdit(transaction: Transaction) {
+    setEditingTransaction(transaction)
+    setIsModalOpen(true)
+  }
+
   async function handleSubmit(data: ExpenseFormData) {
     if (!token) return
-    await createExpense(token, data)
+    if (editingTransaction) {
+      await updateExpense(token, editingTransaction.id, data)
+    } else {
+      await createExpense(token, data)
+    }
     await loadTransactions()
   }
 
@@ -80,7 +95,7 @@ export default function FinancePage() {
               <SearchInput value={search} onChange={setSearch} placeholder="Buscar descrição ou cliente..." />
               <Button
                 type="button"
-                onClick={() => setIsModalOpen(true)}
+                onClick={handleOpenCreate}
                 className="w-auto px-4 py-2 text-sm"
               >
                 + Nova despesa
@@ -91,7 +106,11 @@ export default function FinancePage() {
           {isLoading ? (
             <p className="text-sm text-ink-muted">Carregando...</p>
           ) : (
-            <TransactionsTable transactions={filteredTransactions} onDelete={handleDelete} />
+            <TransactionsTable
+              transactions={filteredTransactions}
+              onEdit={handleOpenEdit}
+              onDelete={handleDelete}
+            />
           )}
         </main>
       </div>
@@ -100,6 +119,7 @@ export default function FinancePage() {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
+        editingTransaction={editingTransaction}
       />
     </div>
   )

@@ -146,3 +146,13 @@ export async function deleteProduct(token: string, id: number): Promise<void> {
   })
   if (!response.ok) throw new Error('Erro ao remover produto')
 }
+
+export async function updateExpense(token: string, id: number, data: ExpenseFormData): Promise<Transaction> {
+  const response = await fetch(`${API_URL}/transactions/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) throw new Error('Erro ao atualizar despesa')
+  return response.json()
+}
