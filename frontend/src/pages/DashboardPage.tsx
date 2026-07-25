@@ -6,7 +6,8 @@ import StatCard from '../components/StatCard'
 import SalesChart from '../components/SalesChart'
 import OrdersPanel from '../components/OrdersPanel'
 import AttentionPanel from '../components/AttentionPanel'
-import { getClients, getTransactions, getProducts } from '../services/api'
+import InsightsPanel from '../components/InsightsPanel'
+import { getClients, getTransactions, getProducts, getDashboardInsights } from '../services/api'
 import type { Client } from '../types/client'
 import type { Transaction } from '../types/transaction'
 import type { Product } from '../types/product'
@@ -103,6 +104,8 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [insights, setInsights] = useState<string[]>([])
+  const [isLoadingInsights, setIsLoadingInsights] = useState(true)
 
   useEffect(() => {
     async function loadData() {
@@ -122,6 +125,21 @@ export default function DashboardPage() {
       }
     }
     loadData()
+  }, [token])
+
+  useEffect(() => {
+    async function loadInsights() {
+      if (!token) return
+      setIsLoadingInsights(true)
+      try {
+        setInsights(await getDashboardInsights(token))
+      } catch {
+        setInsights([])
+      } finally {
+        setIsLoadingInsights(false)
+      }
+    }
+    loadInsights()
   }, [token])
 
   const pendingExpenses = transactions.filter((tx) => tx.type === 'despesa').length
@@ -172,6 +190,10 @@ export default function DashboardPage() {
                 {stats.map((stat) => (
                   <StatCard key={stat.label} {...stat} />
                 ))}
+              </div>
+
+              <div className="mt-6">
+                <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">

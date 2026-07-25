@@ -156,3 +156,12 @@ export async function updateExpense(token: string, id: number, data: ExpenseForm
   if (!response.ok) throw new Error('Erro ao atualizar despesa')
   return response.json()
 }
+
+export async function getDashboardInsights(token: string): Promise<string[]> {
+  const response = await fetch(`${API_URL}/dashboard/insights`, {
+    headers: authHeaders(token),
+  })
+  if (!response.ok) throw new Error('Erro ao gerar insights')
+  const data = await response.json()
+  return data.insights
+}

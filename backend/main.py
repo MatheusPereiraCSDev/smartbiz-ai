@@ -8,6 +8,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from security import hash_password, verify_password, create_access_token, decode_access_token
 from notifications import send_purchase_notification
 import schemas
+from ai_insights import generate_insights
+from datetime import date
+
 
 def get_db():
     db = SessionLocal()
@@ -307,3 +310,37 @@ def update_transaction(
     db.commit()
     db.refresh(transaction)
     return transaction
+
+@app.get("/dashboard/insights")
+def get_dashboard_insights(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    today = date.today()
+    transactions = db.query(models.Transaction).all()
+    clients = db.query(models.Client).all()
+    products = db.query(models.Product).all()
+
+    month_revenue = sum(
+        t.amount for t in transactions
+        if t.type == "receita" and t.date.month == today.month and t.date.year == today.year
+    )
+    month_expenses = sum(
+        t.amount for t in transactions
+        if t.type == "despesa" and t.date.month == today.month and t.date.year == today.year
+    )
+    clients_without_purchase = sum(
+        1 for c in clients if not any(t.client_id == c.id for t in transactions)
+    )
+    low_stock = sum(1 for p in products if p.stock <= 5)
+
+    summary = {
+        "revenue": month_revenue,
+        "expenses": month_expenses,
+        "total_clients": len(clients),
+        "clients_without_purchase": clients_without_purchase,
+        "low_stock_products": low_stock,
+    }
+
+    insights = generate_insights(summary)
+    return {"insights": insights}
