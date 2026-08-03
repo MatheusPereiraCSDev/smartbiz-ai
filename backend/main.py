@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from psycopg2 import IntegrityError
 from pydantic import BaseModel
 from database import engine, Base, SessionLocal
 import models
@@ -177,8 +178,16 @@ def delete_client(
     if not client:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
 
-    db.delete(client)
-    db.commit()
+    try:
+        db.delete(client)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Não é possível excluir um cliente com compras registradas.",
+        )
+
     return {"message": "Cliente removido com sucesso"}
 
 @app.get("/transactions", response_model=list[schemas.TransactionResponse])
