@@ -11,7 +11,7 @@ Full-stack business management system with real authentication, an analytics das
 
 Frontend (React + TS) → Backend (FastAPI) → PostgreSQL (Neon)
 │
-├──→ Groq API (Llama 3.3 70B) — AI insights
+├──→ Groq API (GPT Oss 120B) — AI insights
 │
 └──→ n8n (Webhook) → Evolution API → WhatsApp
 
