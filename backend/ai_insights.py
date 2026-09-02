@@ -26,7 +26,7 @@ Responda APENAS em JSON, neste formato exato, sem texto antes ou depois:
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             max_tokens=300,
             response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}],
