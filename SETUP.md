@@ -1,6 +1,8 @@
 # SmartBiz AI — Setup Guide
 
-This guide walks through setting up the entire SmartBiz AI system from scratch: backend, frontend, and the optional WhatsApp automation.
+This guide walks through setting up the entire SmartBiz AI system from scratch: backend, frontend, AI insights, and the optional WhatsApp automation.
+
+> Looking for the live version instead of running it locally? Check the **Live demo** link in the [README](./README.md).
 
 ## Prerequisites
 
@@ -9,6 +11,7 @@ This guide walks through setting up the entire SmartBiz AI system from scratch: 
 - [PostgreSQL](https://www.postgresql.org/download/) (running locally or accessible remotely)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (only required for the WhatsApp automation)
 - [Git](https://git-scm.com/downloads)
+- A free [Groq](https://console.groq.com) API key (for AI-generated dashboard insights)
 
 ---
 
@@ -68,6 +71,7 @@ DATABASE_URL=postgresql://<user>:<password>@localhost:5432/smartbiz_db
 SECRET_KEY=<generate a random secret key>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
+GROQ_API_KEY=<your Groq API key>
 N8N_WEBHOOK_URL=http://localhost:5678/webhook/enviar-mensagem
 
 
@@ -75,6 +79,8 @@ To generate a strong `SECRET_KEY`:
 ```bash
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
+
+To get a free `GROQ_API_KEY`, sign up at [console.groq.com](https://console.groq.com) — no credit card required.
 
 ### 2.5 Run the backend
 
@@ -85,6 +91,14 @@ uvicorn main:app --reload
 The API will be available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
 
 Tables are created automatically on first run (via SQLAlchemy).
+
+### 2.6 Run the backend tests (optional)
+
+```bash
+pytest -v
+```
+
+Tests run against an isolated in-memory SQLite database — they never touch your local or production PostgreSQL data.
 
 ---
 
@@ -116,7 +130,13 @@ npm run dev
 
 The app will be available at `http://localhost:5173`.
 
-### 3.4 Create your first account
+### 3.4 Run the frontend tests (optional)
+
+```bash
+npx vitest run
+```
+
+### 3.5 Create your first account
 
 Open `http://localhost:5173`, click **"Cadastre-se"**, and create a user. Then log in — you'll be redirected to the dashboard.
 
@@ -124,7 +144,7 @@ Open `http://localhost:5173`, click **"Cadastre-se"**, and create a user. Then l
 
 ## 4. WhatsApp automation setup (optional)
 
-This step is only needed if you want purchase notifications to be sent automatically via WhatsApp. The rest of the system works fully without it.
+This step is only needed if you want purchase notifications to be sent automatically via WhatsApp. The rest of the system — including AI insights — works fully without it.
 
 ### 4.1 Enable virtualization (Windows only, if Docker fails to start)
 
@@ -257,7 +277,7 @@ Register a purchase for a client with a valid phone number (including country co
 
 ## 5. Running everything together
 
-Once set up, day-to-day usage requires three terminals:
+Once set up, day-to-day usage requires two terminals (three if using WhatsApp automation):
 
 **Terminal 1 — Backend**
 ```bash
@@ -282,11 +302,35 @@ Then open `http://localhost:5173` in your browser.
 
 ---
 
+## Deploying to production
+
+The live demo runs on:
+- **Neon** — managed PostgreSQL
+- **Render** — backend (Web Service, Root Directory: `backend`, Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`)
+- **Vercel** — frontend (Root Directory: `frontend`)
+
+Key points if replicating this setup:
+- Set the same environment variables listed in step 2.4 on Render (WhatsApp automation excluded — it isn't part of the production deployment)
+- Set `VITE_API_URL` on Vercel to your Render backend URL
+- Update the CORS `origins` list in `backend/main.py` to include your Vercel domain
+- Add a `vercel.json` with SPA rewrites in `frontend/` so client-side routes don't 404 on refresh:
+```json
+  {
+    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  }
+```
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
 |---|---|
 | `net::ERR_CONNECTION_REFUSED` in the browser console | Backend isn't running |
 | `psycopg2.errors.UndefinedColumn` | Database schema is out of sync — drop the affected table and restart the backend to let SQLAlchemy recreate it |
+| `psycopg2.errors.ForeignKeyViolation` when deleting a client/record | Expected behavior — the record has linked transactions; delete those first or keep the record for historical integrity |
 | Evolution API container stuck in `Restarting` | Check `docker logs evolution_api` — usually a missing database configuration |
 | WhatsApp message not sent | Confirm the n8n workflow is **Published** (not just tested) and the client's phone includes the country code |
+| CORS error in production (`No 'Access-Control-Allow-Origin' header`) | Usually a symptom of a backend 500 error, not an actual CORS misconfiguration — check the Render logs for the real exception |
+| 404 on page refresh in production (Vercel) | Missing `vercel.json` SPA rewrite — see "Deploying to production" above |
+| Backend responds slowly on first request in production | Render's free tier sleeps after 15 minutes of inactivity — the first request wakes it up (30–60s) |
